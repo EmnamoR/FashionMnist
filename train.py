@@ -25,21 +25,48 @@ class trainer(object):
             shuffle=[False]
         )
 
+    def __init_training_params(self, run):
+        model = CNNModel().to(self.device)
+        dataset, train_sampler, valid_sampler = self.dataloader.getLoaders(run.shuffle)
+        validation_loader = torch.utils.data.DataLoader(dataset,
+                                                        batch_size=run.batch_size,
+                                                        sampler=valid_sampler)
+        train_loader = torch.utils.data.DataLoader(dataset,
+                                                   batch_size=run.batch_size,
+                                                   sampler=train_sampler)
+
+        # self.optimizer = optim.Adam(self.model.parameters(), lr=run.lr)
+        optimizer = torch.optim.SGD(model.parameters(), lr=run.lr,
+                                    momentum=0.9, nesterov=True)
+        return model, train_loader, validation_loader, optimizer
+
+    def __evaluate_model(self, model, validation_loader, accuracy, test_loss):
+        with torch.no_grad():
+            model.eval()
+            for images, labels in validation_loader:
+                images = images.to(self.device)
+                labels = labels.to(self.device)
+                log_ps = model(images)
+                prob = torch.exp(log_ps)
+                top_probs, top_classes = prob.topk(1, dim=1)
+                equals = labels == top_classes.view(labels.shape)
+                accuracy += equals.type(torch.FloatTensor).mean()
+                test_loss += self.criterion(log_ps, labels)
+        return accuracy, test_loss
+
+    def __train_model(self, model, images, labels, optimizer, train_loss):
+        images = images.to(self.device)
+        labels = labels.to(self.device)
+        optimizer.zero_grad()
+        op = model(images)
+        loss = self.criterion(op, labels)
+        train_loss += loss.item()
+        loss.backward()
+        optimizer.step()
+
     def run(self):
         for run in RunBuilder.get_runs(self.params):
-            model = CNNModel().to(self.device)
-            dataset, train_sampler, valid_sampler = self.dataloader.getLoaders(run.shuffle)
-            validation_loader = torch.utils.data.DataLoader(dataset,
-                                                            batch_size=run.batch_size,
-                                                            sampler=valid_sampler)
-            train_loader = torch.utils.data.DataLoader(dataset,
-                                                       batch_size=run.batch_size,
-                                                       sampler=train_sampler)
-
-            # self.optimizer = optim.Adam(self.model.parameters(), lr=run.lr)
-            self.optimizer = torch.optim.SGD(model.parameters(), lr=run.lr,
-                                             momentum=0.9, nesterov=True)
-            # scheduler = StepLR(self.optimizer, step_size=2, gamma=0.1)
+            model, train_loader, validation_loader, optimizer = self.__init_training_params(run)
 
             train_losses, test_losses = [], []
 
@@ -48,26 +75,9 @@ class trainer(object):
                 test_loss = 0
                 accuracy = 0
                 for images, labels in train_loader:
-                    images = images.to(self.device)
-                    labels = labels.to(self.device)
-                    self.optimizer.zero_grad()
-                    op = model(images)
-                    loss = self.criterion(op, labels)
-                    train_loss += loss.item()
-                    loss.backward()
-                    self.optimizer.step()
+                    self.__train_model(model, images, labels, optimizer, train_loss)
                 else:
-                    with torch.no_grad():
-                        model.eval()
-                        for images, labels in validation_loader:
-                            images = images.to(self.device)
-                            labels = labels.to(self.device)
-                            log_ps = model(images)
-                            prob = torch.exp(log_ps)
-                            top_probs, top_classes = prob.topk(1, dim=1)
-                            equals = labels == top_classes.view(labels.shape)
-                            accuracy += equals.type(torch.FloatTensor).mean()
-                            test_loss += self.criterion(log_ps, labels)
+                    accuracy, test_loss = self.__evaluate_model(model, validation_loader, accuracy, test_loss)
                     model.train()
                 train_loss_e = train_loss / len(train_loader)
                 test_loss_e = test_loss / len(validation_loader)
