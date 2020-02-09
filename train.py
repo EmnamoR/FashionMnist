@@ -1,18 +1,22 @@
+import os
 import sys
 from collections import OrderedDict
+
 import torch
 import torch.nn as nn
 
 from configs.config import get_config
 from dataLoader import dataLoader
-
 from models import CNNModel
+from utils.earlyStopping import EarlyStopping
 from utils.hyperTune import RunBuilder
 from utils.logger import logger
+from utils.tflogs import logWriter
 
 
 class trainer(object):
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
         self.config = get_config()
         self.dataloader = dataLoader(self.config)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -26,6 +30,7 @@ class trainer(object):
             shuffle=[False]
         )
         self.logger = logger().get_logger(logger_name='Advertima logs')
+        self.tf_logs = logWriter()
 
     def __init_training_params(self, run):
         model = CNNModel().to(self.device)
@@ -68,12 +73,14 @@ class trainer(object):
             optimizer.step()
         return train_loss
 
-    def run(self, verbose=True):
+    def run(self):
+
         for run in RunBuilder.get_runs(self.params):
+            self.tf_logs.begin_run(run)
             model, train_loader, validation_loader, optimizer = self.__init_training_params(run)
-
             train_losses, test_losses = [], []
-
+            epoch_count = 0
+            early_stopping = EarlyStopping(patience=10, verbose=self.verbose)
             for epoch in range(self.config.epochs):
                 train_loss = 0
                 test_loss = 0
@@ -85,15 +92,25 @@ class trainer(object):
                 train_loss_e = train_loss / len(train_loader)
                 test_loss_e = test_loss / len(validation_loader)
                 accuracy_e = accuracy / len(validation_loader)
-                if verbose:
+                if self.verbose:
                     self.logger.info(
                         'Epoch: {}/{} ==> Training Loss: {:.3f} | Test Loss: {:.3f} | Test Accuracy: {:.3f}'.format(
                             epoch + 1, self.config.epochs, train_loss_e, test_loss_e, accuracy_e))
 
                 train_losses.append(train_loss_e)
                 test_losses.append(test_loss_e)
+                self.tf_logs.add_to_board(train_loss_e, test_loss_e, accuracy_e, epoch_count)
+                # early_stopping needs the validation loss to check if it has decresed,
+                # and if it has, it will make a checkpoint of the current model
+                early_stopping(test_loss_e, model, os.path.join(self.config.model_save_dir,
+                                                                str(run.lr) + '_' + str(run.batch_size) + '_' + str(
+                                                                    run.shuffle) + '_checkpoint.pt'))
+
+                epoch_count += 1
+                if early_stopping.early_stop:
+                    break
 
 
 if __name__ == '__main__':
-    t = trainer()
+    t = trainer(True)
     t.run()
