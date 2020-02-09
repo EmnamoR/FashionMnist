@@ -1,5 +1,4 @@
 from torch.utils.tensorboard import SummaryWriter
-from utils.helpers import plot_classes_preds
 
 class logWriter():
   def __init__(self):
@@ -16,8 +15,3 @@ class logWriter():
     self.tb.add_scalar('Train Loss', train_loss, num_epoch)
     self.tb.add_scalar('Accuracy', acc, num_epoch)
 
-
-  def display_predictions(self, num_epoch,step,  model, images, labels, loader):
-    self.tb.add_figure('predictions vs. actuals',
-                            plot_classes_preds(model, images, labels),
-                            global_step=num_epoch * len(loader) + step)
