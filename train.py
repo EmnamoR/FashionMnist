@@ -8,6 +8,7 @@ from dataLoader import dataLoader
 
 from models import CNNModel
 from utils.hyperTune import RunBuilder
+from utils.logger import logger
 
 
 class trainer(object):
@@ -24,6 +25,7 @@ class trainer(object):
             batch_size=[64, 512],
             shuffle=[False]
         )
+        self.logger = logger().get_logger(logger_name='Advertima logs')
 
     def __init_training_params(self, run):
         model = CNNModel().to(self.device)
@@ -54,7 +56,7 @@ class trainer(object):
                 test_loss += self.criterion(log_ps, labels)
         return accuracy, test_loss
 
-    def __train_model(self, model,train_loader, optimizer, train_loss):
+    def __train_model(self, model, train_loader, optimizer, train_loss):
         for images, labels in train_loader:
             images = images.to(self.device)
             labels = labels.to(self.device)
@@ -66,7 +68,7 @@ class trainer(object):
             optimizer.step()
         return train_loss
 
-    def run(self):
+    def run(self, verbose=True):
         for run in RunBuilder.get_runs(self.params):
             model, train_loader, validation_loader, optimizer = self.__init_training_params(run)
 
@@ -83,10 +85,11 @@ class trainer(object):
                 train_loss_e = train_loss / len(train_loader)
                 test_loss_e = test_loss / len(validation_loader)
                 accuracy_e = accuracy / len(validation_loader)
-                print("Epoch: {}/{}.. ".format(epoch + 1, self.config.epochs),
-                      "Training Loss: {:.3f}.. ".format(train_loss_e),
-                      "Test Loss: {:.3f}.. ".format(test_loss_e),
-                      "Test Accuracy: {:.3f}".format(accuracy_e))
+                if verbose:
+                    self.logger.info(
+                        'Epoch: {}/{} ==> Training Loss: {:.3f} | Test Loss: {:.3f} | Test Accuracy: {:.3f}'.format(
+                            epoch + 1, self.config.epochs, train_loss_e, test_loss_e, accuracy_e))
+
                 train_losses.append(train_loss_e)
                 test_losses.append(test_loss_e)
 
