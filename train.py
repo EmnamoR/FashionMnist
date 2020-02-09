@@ -54,15 +54,17 @@ class trainer(object):
                 test_loss += self.criterion(log_ps, labels)
         return accuracy, test_loss
 
-    def __train_model(self, model, images, labels, optimizer, train_loss):
-        images = images.to(self.device)
-        labels = labels.to(self.device)
-        optimizer.zero_grad()
-        op = model(images)
-        loss = self.criterion(op, labels)
-        train_loss += loss.item()
-        loss.backward()
-        optimizer.step()
+    def __train_model(self, model,train_loader, optimizer, train_loss):
+        for images, labels in train_loader:
+            images = images.to(self.device)
+            labels = labels.to(self.device)
+            optimizer.zero_grad()
+            op = model(images)
+            loss = self.criterion(op, labels)
+            train_loss += loss.item()
+            loss.backward()
+            optimizer.step()
+        return train_loss
 
     def run(self):
         for run in RunBuilder.get_runs(self.params):
@@ -74,11 +76,10 @@ class trainer(object):
                 train_loss = 0
                 test_loss = 0
                 accuracy = 0
-                for images, labels in train_loader:
-                    self.__train_model(model, images, labels, optimizer, train_loss)
-                else:
-                    accuracy, test_loss = self.__evaluate_model(model, validation_loader, accuracy, test_loss)
-                    model.train()
+
+                train_loss = self.__train_model(model, train_loader, optimizer, train_loss)
+                accuracy, test_loss = self.__evaluate_model(model, validation_loader, accuracy, test_loss)
+                model.train()
                 train_loss_e = train_loss / len(train_loader)
                 test_loss_e = test_loss / len(validation_loader)
                 accuracy_e = accuracy / len(validation_loader)
