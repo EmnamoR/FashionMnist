@@ -4,7 +4,7 @@ from itertools import product
 
 # Read in the hyper-parameters and return a Run namedtuple containing all the
 # combinations of hyper-parameters
-class RunBuilder():
+class RunBuilder:
   @staticmethod
   def get_runs(params):
     Run = namedtuple('Run', params.keys())
