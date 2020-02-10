@@ -33,10 +33,15 @@ During ths experiment i used 2 networks:
 ## Benchmarking
 | model | Accuracy | Training time |
 | --- | --- | --- |
-| CNN3 (lr=0.001, batch_size=64, shuffle=False) | 0.907 | 542|
-| CNN3 (lr=0.001, batch_size=128, shuffle=False) | 0.908 | 592|
+| CNN5 (lr=0.001, batch_size=64, shuffle=False) | 0.907 | 542|
+| CNN5 (lr=0.001, batch_size=128, shuffle=False) | 0.908 | 592|
 | mini_vgg (lr=0.001, batch_size=64, shuffle=False)| 0.922  | 755|
 | mini_vgg (lr=0.001, batch_size=18, shuffle=False)| 0.921| 1152|
+![Mnist fashion data sample](assets/blue.png)  CNN5 (lr=0.001, batch_size=64, shuffle=False)<br>
+![Mnist fashion data sample](assets/rose.png) CNN5 (lr=0.001, batch_size=128, shuffle=False)<br>
+![Mnist fashion data sample](assets/green.png) mini_vgg (lr=0.001, batch_size=64, shuffle=False)<br>
+![Mnist fashion data sample](assets/gray.png)mini_vgg (lr=0.001, batch_size=128, shuffle=False)<br>
+
 ### Test loss
 ![Mnist fashion data sample](assets/Test_Loss.svg)<br>
 ### Train loss
