@@ -1,40 +1,50 @@
+"""
+Script to train Network ideas using Fashion Mnist dataset
+"""
 import os
-import sys
 from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 
 from configs.config import get_config
-from dataLoader import dataLoader
-from models import CNNModel
-from utils.earlyStopping import EarlyStopping
+from dataloader import DataLoader
+from models import CNNModel3, mini_vgg
+from utils.early_Stopping import EarlyStopping
 from utils.hyperTune import RunBuilder
-from utils.logger import logger
-from utils.tflogs import logWriter
+from utils.logger import Logger
+from utils.tflogs import TfLogWriter
 
 
-class trainer(object):
+class Trainer:
+    """
+    Trainer class to train model using diffirent networks and parameters
+    """
+
     def __init__(self, verbose=False):
         self.verbose = verbose
         self.config = get_config()
-        self.dataloader = dataLoader(self.config)
+        self.dataloader = DataLoader(self.config)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.logger = Logger().get_logger(logger_name='Advertima logs')
+
         if torch.cuda.is_available():
-            print("Using CUDA, benchmarking implementations", file=sys.stderr)
+            self.logger.info('Using CUDA, benchmarking implementations')
             torch.backends.cudnn.benchmark = True
+        else:
+            self.logger.warning('Training using CPU may take longer time')
         self.criterion = nn.CrossEntropyLoss()
         self.params = OrderedDict(
-            lr=[.001],
+            models=[CNNModel3(), mini_vgg],
+            lr=[.001],  # [.001, .01]
             batch_size=[64, 512],
-            shuffle=[False]
+            shuffle=[False]  # [false True]
         )
-        self.logger = logger().get_logger(logger_name='Advertima logs')
-        self.tf_logs = logWriter()
+        self.tf_logs = TfLogWriter()
 
     def __init_training_params(self, run):
-        model = CNNModel().to(self.device)
-        dataset, train_sampler, valid_sampler = self.dataloader.getLoaders(run.shuffle)
+        model = run.models.to(self.device)
+        dataset, train_sampler, valid_sampler = self.dataloader.get_loaders(run.shuffle)
         validation_loader = torch.utils.data.DataLoader(dataset,
                                                         batch_size=run.batch_size,
                                                         sampler=valid_sampler)
@@ -55,7 +65,8 @@ class trainer(object):
                 labels = labels.to(self.device)
                 log_ps = model(images)
                 prob = torch.exp(log_ps)
-                top_probs, top_classes = prob.topk(1, dim=1)
+                _, top_classes = prob.topk(1, dim=1)
+
                 equals = labels == top_classes.view(labels.shape)
                 accuracy += equals.type(torch.FloatTensor).mean()
                 test_loss += self.criterion(log_ps, labels)
@@ -66,15 +77,32 @@ class trainer(object):
             images = images.to(self.device)
             labels = labels.to(self.device)
             optimizer.zero_grad()
-            op = model(images)
-            loss = self.criterion(op, labels)
+            out = model(images)
+            loss = self.criterion(out, labels)
             train_loss += loss.item()
             loss.backward()
             optimizer.step()
         return train_loss
 
-    def run(self):
+    def _train_epoch(self, model, optimizer, train_loader, validation_loader):
+        train_loss = 0
+        test_loss = 0
+        accuracy = 0
+        train_loss = self.__train_model(model, train_loader, optimizer, train_loss)
+        accuracy, test_loss = self.__evaluate_model(model,
+                                                    validation_loader, accuracy, test_loss)
+        model.train()
+        train_loss_e = train_loss / len(train_loader)
+        test_loss_e = test_loss / len(validation_loader)
+        accuracy_e = accuracy / len(validation_loader)
 
+        return train_loss_e, test_loss_e, accuracy_e
+
+    def run(self):
+        """
+        method to run trainer  with different networks and parameters
+        save best model for each run (uses early stopping)
+        """
         for run in RunBuilder.get_runs(self.params):
             self.tf_logs.begin_run(run)
             model, train_loader, validation_loader, optimizer = self.__init_training_params(run)
@@ -82,35 +110,29 @@ class trainer(object):
             epoch_count = 0
             early_stopping = EarlyStopping(patience=10, verbose=self.verbose)
             for epoch in range(self.config.epochs):
-                train_loss = 0
-                test_loss = 0
-                accuracy = 0
-
-                train_loss = self.__train_model(model, train_loader, optimizer, train_loss)
-                accuracy, test_loss = self.__evaluate_model(model, validation_loader, accuracy, test_loss)
-                model.train()
-                train_loss_e = train_loss / len(train_loader)
-                test_loss_e = test_loss / len(validation_loader)
-                accuracy_e = accuracy / len(validation_loader)
-                if self.verbose:
-                    self.logger.info(
-                        'Epoch: {}/{} ==> Training Loss: {:.3f} | Test Loss: {:.3f} | Test Accuracy: {:.3f}'.format(
-                            epoch + 1, self.config.epochs, train_loss_e, test_loss_e, accuracy_e))
-
+                train_loss_e, test_loss_e \
+                    , accuracy_e = self._train_epoch(model,
+                                                     optimizer, train_loader, validation_loader)
                 train_losses.append(train_loss_e)
                 test_losses.append(test_loss_e)
+                if self.verbose:
+                    self.logger.info(
+                        'Epoch: {}/{} ==> Training Loss: {:.3f} | '
+                        'Test Loss: {:.3f} | Test Accuracy: {:.3f}'.format(
+                            epoch + 1, self.config.epochs, train_loss_e, test_loss_e, accuracy_e))
                 self.tf_logs.add_to_board(train_loss_e, test_loss_e, accuracy_e, epoch_count)
                 # early_stopping needs the validation loss to check if it has decresed,
                 # and if it has, it will make a checkpoint of the current model
-                early_stopping(test_loss_e, model, os.path.join(self.config.model_save_dir,
-                                                                str(run.lr) + '_' + str(run.batch_size) + '_' + str(
-                                                                    run.shuffle) + '_checkpoint.pt'))
-
-                epoch_count += 1
+                early_stopping(test_loss_e, model,
+                               os.path.join(self.config.model_save_dir,
+                                            str(run.models.__class__.__name__) + '_' + str(run.lr) + '_' + str(
+                                                run.batch_size) + '_' + str(run.shuffle) + '_checkpoint.pt'),
+                               self.logger)
                 if early_stopping.early_stop:
                     break
+                epoch_count += 1
 
 
 if __name__ == '__main__':
-    t = trainer(True)
-    t.run()
+    T = Trainer(True)
+    T.run()
