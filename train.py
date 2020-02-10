@@ -36,7 +36,7 @@ class Trainer:
             self.logger.warning('Training using CPU may take longer time')
         self.criterion = nn.CrossEntropyLoss()
         self.params = OrderedDict(
-            models=[CNNModel3(), mini_vgg],
+            models=[CNNModel3(), mini_vgg()],
             lr=[.001],  # [.001, .01]
             batch_size=[64, 512],
             shuffle=[False]  # [false True]
