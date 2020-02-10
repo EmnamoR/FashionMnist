@@ -37,7 +37,8 @@ During ths experiment i used 2 networks:
 | CNN5 (lr=0.001, batch_size=128, shuffle=False) | 0.908 | 592|
 | mini_vgg (lr=0.001, batch_size=64, shuffle=False)| 0.922  | 755|
 | mini_vgg (lr=0.001, batch_size=18, shuffle=False)| 0.921| 1152|
-![Mnist fashion data sample](assets/blue.png)  CNN5 (lr=0.001, batch_size=64, shuffle=False)<br>
+
+![Mnist fashion data sample](assets/blue.png)  CNN5 (lr=0.001, batch_size=64, shuffle=False) <br>
 ![Mnist fashion data sample](assets/rose.png) CNN5 (lr=0.001, batch_size=128, shuffle=False)<br>
 ![Mnist fashion data sample](assets/green.png) mini_vgg (lr=0.001, batch_size=64, shuffle=False)<br>
 ![Mnist fashion data sample](assets/gray.png)mini_vgg (lr=0.001, batch_size=128, shuffle=False)<br>
@@ -48,3 +49,5 @@ During ths experiment i used 2 networks:
 ![Mnist fashion data sample](assets/Train_Loss.svg)<br>
 ### Accuracy
 ![Mnist fashion data sample](assets/Accuracy.svg)<br>
+
+As the figures show the green model is the best  (lr=0.001, batch_size=64, shuffle=False)
