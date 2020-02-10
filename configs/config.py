@@ -35,7 +35,7 @@ def get_config(**kwargs):
     parser.add_argument('--detail_flag', type=bool, default=True)
 
     # model
-    parser.add_argument('--model_save_dir', type=str, default=Path('save'))
+    parser.add_argument('--model_save_dir', type=str, default=Path('checkpoints'))
     parser.add_argument('-m', '--model_path', type=str)
 
     args = parser.parse_args()
