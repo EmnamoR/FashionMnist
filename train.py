@@ -15,7 +15,7 @@ from utils.early_Stopping import EarlyStopping
 from utils.hyperTune import RunBuilder
 from utils.logger import Logger
 from utils.tflogs import TfLogWriter
-
+from utils.helpers import reset_model_weights
 
 class Trainer:
     """
@@ -133,6 +133,7 @@ class Trainer:
                 if early_stopping.early_stop:
                     break
                 epoch_count += 1
+            reset_model_weights(model)
             epoch_duration = time.time() - epoch_start_time
             self.logger.info('Networking training for {} '.format(epoch_duration))
 
