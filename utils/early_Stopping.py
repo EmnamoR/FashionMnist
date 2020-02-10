@@ -1,14 +1,13 @@
 import numpy as np
 import torch
-from utils.logger import logger
 
 """
+This script enable to stop training after n epochs without validation loss improved
+Early stopping is one of the diverse regularization step to prevent model overfitting
 original code from: https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
 modified to save model with custom model name depending on runs
 replaced prints with logs 
 """
-
-
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
 
@@ -29,28 +28,29 @@ class EarlyStopping:
         self.early_stop = False
         self.val_loss_min = np.Inf
         self.delta = delta
-        self.logger = logger().get_logger(logger_name='Advertima early stoppinglogs')
 
-    def __call__(self, val_loss, model, model_path):
+    def __call__(self, val_loss, model, model_path, logger):
 
         score = -val_loss
 
         if self.best_score is None:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, model_path)
+            self.save_checkpoint(val_loss, model, model_path, logger)
         elif score < self.best_score + self.delta:
             self.counter += 1
-            self.logger.info('EarlyStopping counter: {} out of {}'.format(self.counter, self.patience))
+            logger.info('EarlyStopping counter: {} out of {}'
+                        .format(self.counter, self.patience))
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
             self.best_score = score
-            self.save_checkpoint(val_loss, model, model_path)
+            self.save_checkpoint(val_loss, model, model_path, logger)
             self.counter = 0
 
-    def save_checkpoint(self, val_loss, model, model_path):
+    def save_checkpoint(self, val_loss, model, model_path, logger):
         """Saves model when validation loss decrease."""
         if self.verbose:
-           self.logger.info('Validation loss decreased from {:.3f} to {:.3f} ==> update model weights...'.format(self.val_loss_min, val_loss))
+            logger.info('Validation loss decreased from {:.3f} to {:.3f} '
+                        '==> update model weights...'.format(self.val_loss_min, val_loss))
         torch.save(model.state_dict(), model_path)
         self.val_loss_min = val_loss
