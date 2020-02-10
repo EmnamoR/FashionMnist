@@ -16,7 +16,7 @@ class TfLogWriter:
         :param run: run containing custom param
         write to tensorboard
         """
-        self.tboard = SummaryWriter(comment=f'-{run.models.__class__.__name__}')
+        self.tboard = SummaryWriter(comment=f'-{run.models.__class__.__name__ + str(run.batch_size)}')
 
     def add_to_board(self, train_loss, test_loss, acc, num_epoch):
         """
