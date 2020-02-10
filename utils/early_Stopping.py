@@ -1,13 +1,14 @@
-import numpy as np
-import torch
-
 """
 This script enable to stop training after n epochs without validation loss improved
 Early stopping is one of the diverse regularization step to prevent model overfitting
 original code from: https://github.com/Bjarten/early-stopping-pytorch/blob/master/pytorchtools.py
 modified to save model with custom model name depending on runs
-replaced prints with logs 
+replaced prints with logs
 """
+import numpy as np
+import torch
+
+
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
 
