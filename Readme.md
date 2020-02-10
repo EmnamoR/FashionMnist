@@ -1,6 +1,27 @@
 # Fashion Mnist Image classification
 The task is to classify Fashion Mnist images to 10 classes which are:
+## Getting Started
 
+These instructions will get you a copy of the project up and running on your local machine .
+### Prerequisites
+- python3.6 installed (app tested on3.6 only)
+- Have virtualenv installed on your machine
+- create virtual environment 
+`conda create --name adver`
+or 
+`virtualenv adver --python python3`
+- activate virtual env
+`conda activate adver`
+or 
+`source path_to_virtualenv/adver/bin/activate`
+### Installing
+```pip install -r requirements.txt```
+### Run
+<br>To run this app 
+```
+pythton train.py
+```
+### Dataset Description
 | Label | Description |
 | --- | --- |
 | 0 | T-shirt/top |
