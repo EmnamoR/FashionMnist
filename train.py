@@ -2,6 +2,7 @@
 Script to train Network ideas using Fashion Mnist dataset
 """
 import os
+import time
 from collections import OrderedDict
 
 import torch
@@ -109,6 +110,7 @@ class Trainer:
             train_losses, test_losses = [], []
             epoch_count = 0
             early_stopping = EarlyStopping(patience=10, verbose=self.verbose)
+            epoch_start_time = time.time()
             for epoch in range(self.config.epochs):
                 train_loss_e, test_loss_e \
                     , accuracy_e = self._train_epoch(model,
@@ -131,7 +133,8 @@ class Trainer:
                 if early_stopping.early_stop:
                     break
                 epoch_count += 1
-
+            epoch_duration = time.time() - epoch_start_time
+            self.logger.info('Networking training for {} '.format(epoch_duration))
 
 if __name__ == '__main__':
     T = Trainer(True)
