@@ -13,8 +13,11 @@ The task is to classify Fashion Mnist images to 10 classes which are:
 | 7 | Sneaker |
 | 8 | Bag |
 | 9 | Ankle boot |
+
 This is how the dataset looks like: <br>
 ![Mnist fashion data sample](assets/fashion-mnist-sprite.png)
+
+## Models
 <br>The images are '28*28', so i thought about using tiny networks (prevent image shrinking)
 During ths experiment i used 2 networks:
 ### Lenet-5 based network
