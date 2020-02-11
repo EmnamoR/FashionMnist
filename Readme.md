@@ -22,4 +22,5 @@ or
 ```
 pythton train.py
 ```
-
+## Documentation
+`please find the full documentation of this app:  `[here](https://github.com/EmnamoR/AdverFashionMnist/blob/master/Documentation.md)
