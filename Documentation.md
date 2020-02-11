@@ -68,7 +68,7 @@ We could improve this by adding more values to
 - shuffle [`True`, `False`] : was only set to false
 - patience [`10`, `15`, `20`]: earlystopping parameter, set to 10 in our experiment.
 - ....
-<br>
+
 
 # Bonus Question:
 So i wrote a code to make image segmentation by fashion item and i applied trained model on it but i could not find enough time to work on it and process the images:
