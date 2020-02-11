@@ -60,7 +60,7 @@ Also you can see diffirent used parameters when training the model.
 ### Accuracy
 ![Mnist fashion data sample](assets/Accuracy.svg)<br>
 
-As the figures show the green model is the best  (lr=0.001, batch_size=64, shuffle=False)
+As the figures show the green model is the best  (lr=0.001, batch_size=64, shuffle=False) <br>
 ## Improving the model by more hyper tuning
 Due to limited resources/time, i only set few parameters for hyperparameter tuning. <br>
 We could improve this by adding more values to 
@@ -68,10 +68,14 @@ We could improve this by adding more values to
 - shuffle [`True`, `False`] : was only set to false
 - patience [`10`, `15`, `20`]: earlystopping parameter, set to 10 in our experiment.
 - ....
+<br>
+
 # Bonus Question:
-I could not find enough time to work on it:
+So i wrote a code to make image segmentation by fashion item and i applied trained model on it but i could not find enough time to work on it and process the images:
 by using a [segmentation model/object detection model](https://www.kaggle.com/pednoi/training-mask-r-cnn-to-be-a-fashionista-lb-0-07) will help to identify `ROI` regions (region of interest), but it is still not enough to apply the model on it. <br>
+![](assets/segmodel.png)
 Fashion mnist dataset is a special dataset with black background. <br>
  Generally it is unreasonable to expect the model to work well on data that is different from what it is has been trained on, but If we want to apply this models on real world images, we need to process our images/frames the same way as Fashion Mnist dataset. and even though, it might not generalize on this processed data.  
  <br> In this experiment mini_vgg gave the better results, we could retrain our network with real world images and then apply it video frames/images.
- 
+ <br>
+ `NB`: `Please do not use my shoes or my trouser any where in the internet without buying a licence :)`
