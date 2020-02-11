@@ -10,7 +10,7 @@ import torch.nn as nn
 
 from configs.config import get_config
 from dataloader import DataLoader
-from models import CNNModel3, mini_vgg
+from models import CNNModel5, mini_vgg
 from utils.early_Stopping import EarlyStopping
 from utils.hyperTune import RunBuilder
 from utils.logger import Logger
@@ -36,9 +36,9 @@ class Trainer:
             self.logger.warning('Training using CPU may take longer time')
         self.criterion = nn.CrossEntropyLoss()
         self.params = OrderedDict(
-            models=[CNNModel3(), mini_vgg()],
+            models=[CNNModel5(), mini_vgg()],
             lr=[.001],  # [.001, .01]
-            batch_size=[64, 512],
+            batch_size=[64, 128],
             shuffle=[False]  # [false True]
         )
         self.tf_logs = TfLogWriter()

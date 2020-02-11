@@ -25,9 +25,9 @@ class mini_vgg(nn.Module):
         x = self.fc2(x)
         return x
 
-class CNNModel3(nn.Module):
+class CNNModel5(nn.Module):
     def __init__(self):
-        super(CNNModel3, self).__init__()
+        super(CNNModel5, self).__init__()
         self.conv1 = nn.Conv2d(in_channels=1, out_channels=6, kernel_size=5, padding=2)
         self.bn1 = nn.BatchNorm2d(6)
         self.conv2 = nn.Conv2d(in_channels=6, out_channels=16, kernel_size=5)
