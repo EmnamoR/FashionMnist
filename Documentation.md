@@ -22,23 +22,31 @@ As we can see in the figure, only conv layers and fully connected layers are lea
 The input layer , the pooling layers and the output have 0 learnable parameters.<br>
 
 ![Mnist fashion data sample](assets/cnn5params.jpg) <br>
-This network contains `58654` parameters almost same as LeNet-5 (Lenet-5 input is 32*32)
-
-As we can see in the figure there is `60865`
+This network contains `60865` parameters almost same as LeNet-5 
 ### mini_VGG network
 ![Mnist fashion data sample](assets/minivgg1.jpg)
 ### mini_VGG Network detailed description
-![Mnist fashion data sample](assets/vggparam.jpg)<br>
-`Total number of parameters equal to 2.097.152`
+The second model is based on VGG network, the idea behind it is to stack convolutional neural networks with using a bigger number of filters.<br>
+As we can see in the figure, this network contains much more parameters then the first model, around `4.8M parameters`., which has made the training slower than the first model.
+<br>
+In this network, i used 4 convolutional layers, together with max pooling layers and Relu as an activation function. 
+This time i used a 512 dense layer .
 
+![Mnist fashion data sample](assets/vggparam.jpg)<br>
+In this section, i will try to benchmark between the 4 models we have. As we can see in this table, the model accuracy for all the models is under 90%.
+<br> mini_vgg with a batch_size=64 is the winning model with an accuracy 0f `92.2%`
 
 ## Benchmarking
-| model | Accuracy | Training time |
-| --- | --- | --- |
-| CNN5 (lr=0.001, batch_size=64, shuffle=False) | 0.907 | 542|
-| CNN5 (lr=0.001, batch_size=128, shuffle=False) | 0.908 | 592|
-| mini_vgg (lr=0.001, batch_size=64, shuffle=False)| 0.922  | 755|
-| mini_vgg (lr=0.001, batch_size=18, shuffle=False)| 0.921| 1152|
+I set the training epochs to 150. Used Early stopping techniques to prevent training while model starts overfitting.<br>
+As we can see in the table, the training time of each model(experiment), the accuracy  and the number of epochs during which the model was training.
+Also you can see diffirent used parameters when training the model.
+
+| model | Accuracy | Training time | Epochs |
+| --- | --- | --- | --- |
+| CNN5 (lr=0.001, batch_size=64, shuffle=False) | 0.907 | 542| 83|
+| CNN5 (lr=0.001, batch_size=128, shuffle=False) | 0.908 | 592| 69 |
+| mini_vgg (lr=0.001, batch_size=64, shuffle=False)| 0.922  | 755| 67 |
+| mini_vgg (lr=0.001, batch_size=18, shuffle=False)| 0.921| 1152| 40 |
 
 ![Mnist fashion data sample](assets/blue.png)  CNN5 (lr=0.001, batch_size=64, shuffle=False) <br>
 ![Mnist fashion data sample](assets/rose.png) CNN5 (lr=0.001, batch_size=128, shuffle=False)<br>
@@ -53,3 +61,17 @@ As we can see in the figure there is `60865`
 ![Mnist fashion data sample](assets/Accuracy.svg)<br>
 
 As the figures show the green model is the best  (lr=0.001, batch_size=64, shuffle=False)
+## Improving the model by more hyper tuning
+Due to limited resources/time, i only set few parameters for hyperparameter tuning. <br>
+We could improve this by adding more values to 
+- learning rate [`1e-3`, `1e-2`, `1e-4`, `1e-1`]
+- shuffle [`True`, `False`] : was only set to false
+- patience [`10`, `15`, `20`]: earlystopping parameter, set to 10 in our experiment.
+- ....
+# Bonus Question:
+I could not find enough time to work on it:
+by using a [segmentation model/object detection model](https://www.kaggle.com/pednoi/training-mask-r-cnn-to-be-a-fashionista-lb-0-07) will help to identify `ROI` regions (region of interest), but it is still not enough to apply the model on it. <br>
+Fashion mnist dataset is a special dataset with black background. <br>
+ Generally it is unreasonable to expect the model to work well on data that is different from what it is has been trained on, but If we want to apply this models on real world images, we need to process our images/frames the same way as Fashion Mnist dataset. and even though, it might not generalize on this processed data.  
+ <br> In this experiment mini_vgg gave the better results, we could retrain our network with real world images and then apply it video frames/images.
+ 
