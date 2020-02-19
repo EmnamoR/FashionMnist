@@ -52,7 +52,7 @@ def reset_model_weights(model):
         if name not in ['pool', 'dropout']:
             module.reset_parameters()
 def check_triplet(model):
-    for name, module in model.named_children():
-        if name in ['TripletNet']:
-            return True
-    return False
+    if model.__class__.__name__ == 'TripletNet':
+        return True
+    else:
+        return False
