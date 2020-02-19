@@ -74,13 +74,10 @@ class Trainer:
             for metric in metrics:
                 message += '\t{}: {}'.format(metric.name(), metric.value())
 
-            val_loss, metrics, accuracy = self.test_epoch(val_loader, model, loss_fn, device, metrics, triplet)
+            val_loss, metrics = self.test_epoch(val_loader, model, loss_fn, device, metrics, triplet)
             val_loss /= len(val_loader)
 
-            message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}, accuracy: {:.4f}'.format(epoch + 1,
-                                                                                                       n_epochs,
-                                                                                                       val_loss,
-                                                                                                       accuracy)
+            message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}'.format(epoch + 1, n_epochs, val_loss)
             self.logger.info(message)
             self.tf_logs.add_to_board(train_loss, val_loss, epoch)
             early_stopping(val_loss, model,
@@ -155,10 +152,7 @@ class Trainer:
             for metric in metrics:
                 metric.reset()
             model.eval()
-            correct = 0
-            total = 0
             val_loss = 0
-            accuracy = 0
             for batch_idx, (data, target) in enumerate(val_loader):
                 target = target if len(target) > 0 else None
                 if target is not None:
@@ -181,7 +175,7 @@ class Trainer:
                     outputs = model(data)
                     loss = loss_fn(outputs, target)
                 val_loss += loss.item()
-        return val_loss, metrics, accuracy
+        return val_loss, metrics
 
     def run(self):
         for run in RunBuilder.get_runs(self.params):

@@ -23,7 +23,7 @@ class TfLogWriter:
         :param train_loss: epoch training loss
         :param test_loss: epoch validation loss
         :param num_epoch: the number of the current epoch
-        :return:  Record epoch loss and accuracy to TensorBoard
+        :return:  Record epoch and losses  to TensorBoard
         """
         self.tboard.add_scalar('Test Loss', test_loss, num_epoch)
         self.tboard.add_scalar('Train Loss', train_loss, num_epoch)
