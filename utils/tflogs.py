@@ -18,14 +18,12 @@ class TfLogWriter:
         """
         self.tboard = SummaryWriter(comment=f'-{run.models.__class__.__name__ + str(run.batch_size)}')
 
-    def add_to_board(self, train_loss, test_loss, acc, num_epoch):
+    def add_to_board(self, train_loss, test_loss, num_epoch):
         """
         :param train_loss: epoch training loss
         :param test_loss: epoch validation loss
-        :param acc: epoch validation accuracy
         :param num_epoch: the number of the current epoch
         :return:  Record epoch loss and accuracy to TensorBoard
         """
         self.tboard.add_scalar('Test Loss', test_loss, num_epoch)
         self.tboard.add_scalar('Train Loss', train_loss, num_epoch)
-        self.tboard.add_scalar('Accuracy', acc, num_epoch)

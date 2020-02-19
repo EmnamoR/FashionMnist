@@ -42,7 +42,7 @@ class Trainer:
         else:
             self.logger.warning('Training using CPU may take longer time')
         self.params = OrderedDict(
-            models=[mini_vgg(), CNNModel5(), TripletNet(self.embedding_net)],
+            models=[TripletNet(self.embedding_net), mini_vgg(), CNNModel5()],
             lr=[.001],  # [.001, .01]
             batch_size=[64, 128]
         )
@@ -82,7 +82,7 @@ class Trainer:
                                                                                                        val_loss,
                                                                                                        accuracy)
             self.logger.info(message)
-            self.tf_logs.add_to_board(train_loss, val_loss, accuracy, epoch)
+            self.tf_logs.add_to_board(train_loss, val_loss, epoch)
             early_stopping(val_loss, model,
                            os.path.join(self.config.model_save_dir,
                                         str(run.models.__class__.__name__) + '_' + str(run.lr) + '_' + str(
@@ -168,33 +168,19 @@ class Trainer:
                         data = (data,)
                     data = tuple(d.to(device) for d in data)
                     outputs = model(*data)
-                    pred = outputs[0].data.max(1, keepdim=True)[1]
-                    correct += pred.eq(target[0].data.view_as(pred)).cpu().sum()
-                    total += target[0].size(0)
-                    accuracy += 100 * float(correct) / total
-
                     if type(outputs) not in (tuple, list):
                         outputs = (outputs,)
                     loss_inputs = outputs
                     if target is not None:
                         target = (target,)
                         loss_inputs += target
-
                     loss_outputs = loss_fn(*loss_inputs)
                     loss = loss_outputs[0] if type(loss_outputs) in (tuple, list) else loss_outputs
                 else:
                     data = data.to(device)
                     outputs = model(data)
                     loss = loss_fn(outputs, target)
-                    prob = torch.exp(outputs)
-                    _, top_classes = prob.topk(1, dim=1)
-
-                    equals = target == top_classes.view(target.shape)
-                    accuracy += equals.type(torch.FloatTensor).mean() / len(val_loader)
                 val_loss += loss.item()
-                for metric in metrics:
-                    metric(outputs, target, loss_outputs)
-
         return val_loss, metrics, accuracy
 
     def run(self):
