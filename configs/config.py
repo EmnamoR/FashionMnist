@@ -27,8 +27,10 @@ def get_config(**kwargs):
     parser.add_argument('--random_seed', type=int, default=42)
     parser.add_argument('--validation_split', type=float, default=0.2)
     parser.add_argument('--epochs', type=int, default=150)
-    parser.add_argument('--images_path', type=str, default='data/train-images-idx3-ubyte')
-    parser.add_argument('--labels_path', type=str, default='data/train-labels-idx1-ubyte')
+    parser.add_argument('--train_images_path', type=str, default='data/train-images-idx3-ubyte')
+    parser.add_argument('--valid_images_path', type=str, default='data/t10k-images-idx3-ubyte')
+    parser.add_argument('--train_labels_path', type=str, default='data/train-labels-idx1-ubyte')
+    parser.add_argument('--valid_labels_path', type=str, default='data/t10k-labels-idx1-ubyte')
 
     # log
     parser.add_argument('-l', '--log_dir', type=str, default=Path('logs'))
