@@ -12,9 +12,9 @@ from torch.optim import lr_scheduler
 
 from configs.config import get_config
 from dataloader import DataLoader
-from models import CNNModel5
+from models import CNNModel5, mini_vgg
+from models import EmbeddingNet, TripletNet
 from triplet.losses import TripletLoss
-from utils.Networks import EmbeddingNet, TripletNet
 from utils.early_Stopping import EarlyStopping
 from utils.helpers import reset_model_weights, check_triplet
 from utils.hyperTune import RunBuilder
@@ -42,14 +42,13 @@ class Trainer:
         else:
             self.logger.warning('Training using CPU may take longer time')
         self.params = OrderedDict(
-            models=[CNNModel5(), TripletNet(self.embedding_net)],
+            models=[mini_vgg(), CNNModel5(), TripletNet(self.embedding_net)],
             lr=[.001],  # [.001, .01]
             batch_size=[64, 128]
         )
         self.tf_logs = TfLogWriter()
 
     def __init_training_params(self, run, model, triplet=False):
-        # dataset, train_sampler, valid_sampler = self.dataloader.get_loaders(run.shuffle)
         train_dataset, valid_dataset = self.dataloader.get_loaders(triplet)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=run.batch_size)
         validation_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=run.batch_size)
@@ -58,9 +57,7 @@ class Trainer:
         return train_loader, validation_loader, optimizer
 
     def fit(self, run, train_loader, val_loader, model, loss_fn, optimizer, scheduler, n_epochs, device, log_interval,
-            metrics=[],
-            triplet=True,
-            start_epoch=0):
+            metrics=[], triplet=False, start_epoch=0):
         epoch_start_time = time.time()
         early_stopping = EarlyStopping(patience=10, verbose=self.verbose)
         for epoch in range(0, start_epoch):
@@ -80,8 +77,10 @@ class Trainer:
             val_loss, metrics, accuracy = self.test_epoch(val_loader, model, loss_fn, device, metrics, triplet)
             val_loss /= len(val_loader)
 
-            message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}, accuracy: {:.4f}'.format(epoch + 1, n_epochs,
-                                                                                     val_loss, accuracy)
+            message += '\nEpoch: {}/{}. Validation set: Average loss: {:.4f}, accuracy: {:.4f}'.format(epoch + 1,
+                                                                                                       n_epochs,
+                                                                                                       val_loss,
+                                                                                                       accuracy)
             self.logger.info(message)
             self.tf_logs.add_to_board(train_loss, val_loss, accuracy, epoch)
             early_stopping(val_loss, model,
@@ -135,9 +134,15 @@ class Trainer:
                 metric(outputs, target, loss_outputs)
 
             if batch_idx % log_interval == 0:
-                message = 'Train: [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                    batch_idx * data.size(0), len(train_loader.dataset),
-                    100. * batch_idx / len(train_loader), np.mean(losses))
+                if triplet:
+                    message = 'Train: [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                        batch_idx * len(data[0]), len(train_loader.dataset),
+                        100. * batch_idx / len(train_loader), np.mean(losses))
+                else:
+                    message = 'Train: [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                        batch_idx * data.size(0), len(train_loader.dataset),
+                        100. * batch_idx / len(train_loader), np.mean(losses))
+
                 self.logger.info(message)
                 losses = []
 
@@ -150,9 +155,9 @@ class Trainer:
             for metric in metrics:
                 metric.reset()
             model.eval()
-            val_loss = 0
-            total = 0
             correct = 0
+            total = 0
+            val_loss = 0
             accuracy = 0
             for batch_idx, (data, target) in enumerate(val_loader):
                 target = target if len(target) > 0 else None
@@ -163,12 +168,10 @@ class Trainer:
                         data = (data,)
                     data = tuple(d.to(device) for d in data)
                     outputs = model(*data)
-                    prob = torch.exp(outputs)
-                    _, top_classes = prob.topk(1, dim=1)
-
-                    equals = target == top_classes.view(target.shape)
-                    accuracy += equals.type(torch.FloatTensor).mean() / len(val_loader)
-
+                    pred = outputs[0].data.max(1, keepdim=True)[1]
+                    correct += pred.eq(target[0].data.view_as(pred)).cpu().sum()
+                    total += target[0].size(0)
+                    accuracy += 100 * float(correct) / total
 
                     if type(outputs) not in (tuple, list):
                         outputs = (outputs,)
@@ -199,16 +202,17 @@ class Trainer:
             self.tf_logs.begin_run(run)
             model = run.models.to(self.device)
             if check_triplet(model):
+                triplet = True
                 loss_fn = TripletLoss(self.margin)
-                train_loader, validation_loader, optimizer = self.__init_training_params(run, model, triplet=True)
             else:
-                train_loader, validation_loader, optimizer = self.__init_training_params(run, model, triplet=False)
+                triplet = False
                 loss_fn = nn.CrossEntropyLoss()
+            train_loader, validation_loader, optimizer = self.__init_training_params(run, model, triplet=triplet)
             scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
             log_interval = 300
             self.fit(run, train_loader, validation_loader, model, loss_fn, optimizer, scheduler, self.config.epochs,
                      self.device,
-                     log_interval, triplet=False)
+                     log_interval, triplet=triplet)
 
 
 if __name__ == '__main__':
