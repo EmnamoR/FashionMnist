@@ -16,6 +16,7 @@ or
 or 
 `source path_to_virtualenv/adver/bin/activate`
 ### Installing
+```git clone -b v1.0 https://github.com/EmnamoR/AdverFashionMnist.git``` <br>
 ```pip install -r requirements.txt```
 ### Run
 <br>To run this app 
