@@ -46,11 +46,11 @@
 # # Per-class accuracy
 # class_accuracy=100*conf_mat.diagonal()/conf_mat.sum(1)
 # print(class_accuracy)
+import torch.nn as nn
 
 def reset_model_weights(model):
-    for name, module in model.named_children():
-        if name not in ['pool', 'dropout']:
-            module.reset_parameters()
+    if isinstance(model, nn.Conv2d) or isinstance(model, nn.Linear):
+        model.reset_parameters()
 def check_triplet(model):
     if model.__class__.__name__ == 'TripletNet':
         return True

@@ -87,7 +87,7 @@ class Trainer:
                            self.logger)
             if early_stopping.early_stop:
                 break
-        reset_model_weights(model)
+        model.apply(reset_model_weights)
 
         epoch_duration = time.time() - epoch_start_time
         self.logger.info('Networking training for {} '.format(epoch_duration))
@@ -189,7 +189,7 @@ class Trainer:
                 loss_fn = nn.CrossEntropyLoss()
             train_loader, validation_loader, optimizer = self.__init_training_params(run, model, triplet=triplet)
             scheduler = lr_scheduler.StepLR(optimizer, 8, gamma=0.1, last_epoch=-1)
-            log_interval = 300
+            log_interval = 450
             self.fit(run, train_loader, validation_loader, model, loss_fn, optimizer, scheduler, self.config.epochs,
                      self.device,
                      log_interval, triplet=triplet)

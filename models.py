@@ -6,26 +6,24 @@ import torch.nn.functional as F
 class EmbeddingNet(nn.Module):
     def __init__(self):
         super(EmbeddingNet, self).__init__()
-        self.convnet = nn.Sequential(nn.Conv2d(1, 32, 5), nn.PReLU(),
-                                     nn.MaxPool2d(2, stride=2),
-                                     nn.Conv2d(32, 64, 5), nn.PReLU(),
-                                     nn.MaxPool2d(2, stride=2))
-
-        self.fc = nn.Sequential(nn.Linear(64 * 4 * 4, 256),
-                                nn.PReLU(),
-                                nn.Linear(256, 256),
-                                nn.PReLU(),
-                                nn.Linear(256, 2)
-                                )
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=5)
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=5)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(in_features=64 * 4 * 4, out_features=256)
+        self.fc2 = nn.Linear(in_features=256, out_features=256)
+        self.fc3 = nn.Linear(in_features=256, out_features=2)
 
     def forward(self, x):
-        output = self.convnet(x)
-        output = output.view(output.size()[0], -1)
-        output = self.fc(output)
+        output = self.pool(F.relu(self.conv1(x)))
+        output = self.pool(F.relu(self.conv2(output)))
+        output = output.view(-1, 64 * 4 * 4)
+        output = F.relu(self.fc1(output))
+        output = F.relu(self.fc2(output))
+        output = self.fc3(output)
         return output
 
-    def get_embedding(self, x):
-        return self.forward(x)
+    #def get_embedding(self, x):
+    #    return self.forward(x)
 
 class TripletNet(nn.Module):
     def __init__(self, embedding_net):
@@ -38,8 +36,8 @@ class TripletNet(nn.Module):
         output3 = self.embedding_net(x3)
         return output1, output2, output3
 
-    def get_embedding(self, x):
-        return self.embedding_net(x)
+    #def get_embedding(self, x):
+    #    return self.embedding_net(x)
 
 class mini_vgg(nn.Module):
     def __init__(self):
