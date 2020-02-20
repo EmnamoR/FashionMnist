@@ -16,7 +16,12 @@ or
 or 
 `source path_to_virtualenv/adver/bin/activate`
 ### Installing
+There is 2 releases that one can install <br>
+- First relase use crossEntropyLoss + Hyperparameter tuning <br>
 ```git clone -b v1.0 https://github.com/EmnamoR/AdverFashionMnist.git``` <br>
+- Second release uses Triplet Loss/ CrossEntropyLoss + Hyperparameter tuning <br>
+```git clone -b v1.2 https://github.com/EmnamoR/AdverFashionMnist.git``` <br>
+
 ```pip install -r requirements.txt```
 ### Run
 <br>To run this app 
