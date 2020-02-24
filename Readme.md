@@ -29,4 +29,5 @@ There is 2 releases that one can install <br>
 pythton train.py
 ```
 ## Documentation
-`please find the full documentation of this app:  `[here](https://github.com/EmnamoR/AdverFashionMnist/blob/master/Documentation.md)
+`please find the full documentation of v1.1 release:  `[here](https://github.com/EmnamoR/AdverFashionMnist/blob/master/V1.1-Documentation.md)
+`please find the full documentation of v1.3 release(triplet loss release):  `[here](https://github.com/EmnamoR/AdverFashionMnist/blob/master/V1.3-Documentation.md)
